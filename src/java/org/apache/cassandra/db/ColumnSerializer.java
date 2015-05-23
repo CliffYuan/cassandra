@@ -21,6 +21,9 @@ import java.io.DataInput;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.apache.cassandra.db.composites.CellName;
 import org.apache.cassandra.db.composites.CellNameType;
 import org.apache.cassandra.io.ISerializer;
@@ -32,6 +35,7 @@ import org.apache.cassandra.utils.ByteBufferUtil;
 
 public class ColumnSerializer implements ISerializer<Cell>
 {
+    private static final Logger logger = LoggerFactory.getLogger(ColumnSerializer.class);
     public final static int DELETION_MASK        = 0x01;
     public final static int EXPIRATION_MASK      = 0x02;
     public final static int COUNTER_MASK         = 0x04;
@@ -63,6 +67,7 @@ public class ColumnSerializer implements ISerializer<Cell>
 
     public void serialize(Cell cell, DataOutputPlus out) throws IOException
     {
+        logger.info("[xnd]列Cell序列化，将数据写入文件流,cell:{}",cell.name().toString());
         assert !cell.name().isEmpty();
         type.cellSerializer().serialize(cell.name(), out);
         try

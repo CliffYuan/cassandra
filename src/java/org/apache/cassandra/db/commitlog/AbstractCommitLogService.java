@@ -43,7 +43,7 @@ public abstract class AbstractCommitLogService
 
     // signal that writers can wait on to be notified of a completed sync
     protected final WaitQueue syncComplete = new WaitQueue();
-    private final Semaphore haveWork = new Semaphore(1);
+    private final Semaphore haveWork = new Semaphore(1);// 信号 相当于互刺锁
 
     final CommitLog commitLog;
     private final String name;
@@ -87,13 +87,13 @@ public abstract class AbstractCommitLogService
                     {
                         // always run once after shutdown signalled
                         run = !shutdown;
-
+                        logger.info("[xnd][commitlog]线程定时执行日志文件刷盘-----开始");
                         // sync and signal
                         long syncStarted = System.currentTimeMillis();
-                        commitLog.sync(shutdown);
+                        commitLog.sync(shutdown);//执行日志入磁盘文件
                         lastSyncedAt = syncStarted;
                         syncComplete.signalAll();
-
+                        logger.info("[xnd][commitlog]线程定时执行日志文件刷盘-----结束");
 
                         // sleep any time we have left before the next one is due
                         long now = System.currentTimeMillis();
@@ -122,7 +122,7 @@ public abstract class AbstractCommitLogService
                         // if we have lagged this round, we probably have work to do already so we don't sleep
                         if (sleep < 0 || !run)
                             continue;
-
+                        logger.info("[xnd][commitlog]线程定时执行日志文件刷盘-----获取锁中.......，将等待{}ms或者其他线程释放了信号",sleep);
                         try
                         {
                             haveWork.tryAcquire(sleep, TimeUnit.MILLISECONDS);
@@ -171,6 +171,7 @@ public abstract class AbstractCommitLogService
      */
     public WaitQueue.Signal requestExtraSync()
     {
+        logger.info("[xnd][commitlog]显示释放信号，同步线程立即syn");
         WaitQueue.Signal signal = syncComplete.register();
         haveWork.release(1);
         return signal;

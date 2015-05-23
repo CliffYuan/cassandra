@@ -26,6 +26,9 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.apache.cassandra.config.CFMetaData;
 import org.apache.cassandra.config.DatabaseDescriptor;
 import org.apache.cassandra.db.*;
@@ -39,6 +42,7 @@ import org.apache.cassandra.utils.Pair;
 
 public abstract class AbstractSSTableSimpleWriter implements Closeable
 {
+    private static final Logger logger = LoggerFactory.getLogger(AbstractSSTableSimpleWriter.class);
     protected final File directory;
     protected final CFMetaData metadata;
     protected DecoratedKey currentKey;
@@ -63,6 +67,7 @@ public abstract class AbstractSSTableSimpleWriter implements Closeable
 
     protected SSTableWriter getWriter()
     {
+        logger.info("[xnd]创建SSTableWriter对象，file:{},KeySpace:{},ColumnFamily:{}",directory,metadata.ksName, metadata.cfName);
         return SSTableWriter.create(createDescriptor(directory, metadata.ksName, metadata.cfName, formatType), 0, ActiveRepairService.UNREPAIRED_SSTABLE);
     }
 
@@ -112,6 +117,7 @@ public abstract class AbstractSSTableSimpleWriter implements Closeable
 
         currentKey = DatabaseDescriptor.getPartitioner().decorateKey(key);
         columnFamily = getColumnFamily();
+        logger.info("[xnd]在CF列族{}中，创建新的一行currentKey:{},columnFamily:{}",this.metadata.cfName,String.valueOf(key.array()),columnFamily);
     }
 
     /**

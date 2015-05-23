@@ -499,7 +499,7 @@ public class QueryProcessor implements QueryHandler
             // The errorCollector has queue up any errors that the lexer and parser may have encountered
             // along the way, if necessary, we turn the last error into exceptions here.
             errorCollector.throwFirstSyntaxError();
-
+            logger.info("[xnd][cql3]构造ParsedStatement:{},根据{}",statement,queryStr);
             return statement;
         }
         catch (CassandraException ce)

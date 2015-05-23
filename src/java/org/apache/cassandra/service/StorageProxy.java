@@ -118,7 +118,7 @@ public class StorageProxy implements StorageProxyMBean
             throws OverloadedException
             {
                 assert mutation instanceof Mutation;
-                sendToHintedEndpoints((Mutation) mutation, targets, responseHandler, localDataCenter);
+                sendToHintedEndpoints((Mutation) mutation, targets, responseHandler, localDataCenter);//执行。。。。
             }
         };
 
@@ -533,6 +533,7 @@ public class StorageProxy implements StorageProxyMBean
 
         try
         {
+            logger.info("[xnd][proxy]写入---根据Keyspace的ReplicationStrategy写数据-----开始，localDataCenter：{},ConsistencyLevel:{}",localDataCenter,consistency_level);
             for (IMutation mutation : mutations)
             {
                 if (mutation instanceof CounterMutation)
@@ -545,12 +546,15 @@ public class StorageProxy implements StorageProxyMBean
                     responseHandlers.add(performWrite(mutation, consistency_level, localDataCenter, standardWritePerformer, null, wt));
                 }
             }
+            logger.info("[xnd][proxy]写入---根据Keyspace的ReplicationStrategy写数据-----结束");
 
+            logger.info("[xnd][proxy]异步写入，在这里等待返回----开始");
             // wait for writes.  throws TimeoutException if necessary
             for (AbstractWriteResponseHandler<IMutation> responseHandler : responseHandlers)
             {
                 responseHandler.get();
             }
+            logger.info("[xnd][proxy]异步写入，在这里等待返回----结束");
         }
         catch (WriteTimeoutException|WriteFailureException ex)
         {
@@ -629,13 +633,15 @@ public class StorageProxy implements StorageProxyMBean
     throws WriteTimeoutException, WriteFailureException, UnavailableException, OverloadedException, InvalidRequestException
     {
         Collection<Mutation> augmented = TriggerExecutor.instance.execute(mutations);
-
+        logger.info("[xnd][proxy]---开始");
         if (augmented != null)
             mutateAtomically(augmented, consistencyLevel);
         else if (mutateAtomically)
             mutateAtomically((Collection<Mutation>) mutations, consistencyLevel);
         else
             mutate(mutations, consistencyLevel);
+
+        logger.info("[xnd][proxy]---结束");
     }
 
     /**
@@ -800,6 +806,9 @@ public class StorageProxy implements StorageProxyMBean
         List<InetAddress> naturalEndpoints = StorageService.instance.getNaturalEndpoints(keyspaceName, tk);
         Collection<InetAddress> pendingEndpoints = StorageService.instance.getTokenMetadata().pendingEndpointsFor(tk, keyspaceName);
 
+        StringBuffer sb=new StringBuffer();for (InetAddress inetAddress:naturalEndpoints){sb.append(inetAddress.getHostAddress()).append("|");}
+        StringBuffer pending=new StringBuffer();for (InetAddress inetAddress:pendingEndpoints){pending.append(inetAddress.getHostAddress()).append("|");}
+        logger.info("[xnd][proxy]根据mutation的token计算自然的端{}和pending的端{}",sb.toString(),pending.toString());
         AbstractWriteResponseHandler<IMutation> responseHandler = rs.getWriteResponseHandler(naturalEndpoints, pendingEndpoints, consistency_level, callback, writeType);
 
         // exit early if we can't fulfill the CL at this time
@@ -863,7 +872,7 @@ public class StorageProxy implements StorageProxyMBean
     /**
      * Send the mutations to the right targets, write it locally if it corresponds or writes a hint when the node
      * is not available.
-     *
+     * 发送到对应的机器，如果它对应于或写入提示当节点不可用，则本地写。
      * Note about hints:
      * <pre>
      * {@code
@@ -890,7 +899,7 @@ public class StorageProxy implements StorageProxyMBean
 
         boolean insertLocal = false;
 
-
+        logger.info("[xnd][proxy]存储代理，写本地或远程---开始");
         for (InetAddress destination : targets)
         {
             // avoid OOMing due to excess hints.  we need to do this check even for "live" nodes, since we can
@@ -955,6 +964,7 @@ public class StorageProxy implements StorageProxyMBean
             for (Collection<InetAddress> dcTargets : dcGroups.values())
                 sendMessagesToNonlocalDC(message, dcTargets, responseHandler);
         }
+        logger.info("[xnd][proxy]存储代理，写本地或远程---结束");
     }
 
     private static AtomicInteger getHintsInProgressFor(InetAddress destination)
@@ -1063,8 +1073,10 @@ public class StorageProxy implements StorageProxyMBean
             {
                 try
                 {
+                    logger.info("[xnd][proxy]写本地---------开始");
                     mutation.apply();
                     responseHandler.response(null);
+                    logger.info("[xnd][proxy]写本地---------结束");
                 }
                 catch (Exception ex)
                 {

@@ -23,6 +23,9 @@ import java.util.*;
 
 import com.google.common.annotations.VisibleForTesting;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.apache.cassandra.config.DatabaseDescriptor;
 import org.apache.cassandra.db.composites.Composite;
 import org.apache.cassandra.io.sstable.IndexHelper;
@@ -31,6 +34,8 @@ import org.apache.cassandra.utils.ByteBufferUtil;
 
 public class ColumnIndex
 {
+    private static final Logger logger = LoggerFactory.getLogger(ColumnIndex.class);
+
     public final List<IndexHelper.IndexInfo> columnsIndex;
 
     private static final ColumnIndex EMPTY = new ColumnIndex(Collections.<IndexHelper.IndexInfo>emptyList());
@@ -174,7 +179,7 @@ public class ColumnIndex
         public void add(OnDiskAtom column) throws IOException
         {
             atomCount++;
-
+            logger.info("[xnd]将column写入文件");
             if (firstColumn == null)
             {
                 firstColumn = column;
@@ -198,8 +203,8 @@ public class ColumnIndex
                 lastBlockClosing = column;
             }
 
-            maybeWriteRowHeader();
-            atomSerializer.serializeForSSTable(column, output);
+            maybeWriteRowHeader();//写rowheader
+            atomSerializer.serializeForSSTable(column, output);//写列
 
             // TODO: Should deal with removing unneeded tombstones
             tombstoneTracker.update(column, false);
@@ -211,7 +216,7 @@ public class ColumnIndex
         {
             if (lastColumn == null)
             {
-                ByteBufferUtil.writeWithShortLength(key, output);
+                ByteBufferUtil.writeWithShortLength(key, output);logger.info("[xnd]写rowHeader到输出流");
                 DeletionTime.serializer.serialize(deletionInfo.getTopLevelDeletion(), output);
             }
         }

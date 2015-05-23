@@ -257,6 +257,7 @@ public class CassandraDaemon
         {
             public void run()
             {
+                logger.info("[xnd][compaction]每5分钟进行一次对所有库的压缩----开始");
                 for (Keyspace keyspaceName : Keyspace.all())
                 {
                     for (ColumnFamilyStore cf : keyspaceName.getColumnFamilyStores())
@@ -265,6 +266,7 @@ public class CassandraDaemon
                             CompactionManager.instance.submitBackground(store);
                     }
                 }
+                logger.info("[xnd][compaction]每5分钟进行一次对所有库的压缩----结束");
             }
         };
         ScheduledExecutors.optionalTasks.schedule(runnable, 5, TimeUnit.MINUTES);
@@ -310,13 +312,13 @@ public class CassandraDaemon
         if (sizeRecorderInterval > 0)
             ScheduledExecutors.optionalTasks.scheduleWithFixedDelay(SizeEstimatesRecorder.instance, 30, sizeRecorderInterval, TimeUnit.SECONDS);
 
-        // Thrift
+        // Thrift 启动thrift
         InetAddress rpcAddr = DatabaseDescriptor.getRpcAddress();
         int rpcPort = DatabaseDescriptor.getRpcPort();
         int listenBacklog = DatabaseDescriptor.getRpcListenBacklog();
         thriftServer = new ThriftServer(rpcAddr, rpcPort, listenBacklog);
 
-        // Native transport
+        // Native transport 启动
         InetAddress nativeAddr = DatabaseDescriptor.getRpcAddress();
         int nativePort = DatabaseDescriptor.getNativeTransportPort();
         nativeServer = new org.apache.cassandra.transport.Server(nativeAddr, nativePort);

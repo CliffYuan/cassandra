@@ -236,6 +236,7 @@ public class ColumnFamilyStore implements ColumnFamilyStoreMBean
                 }
             };
             ScheduledExecutors.scheduledTasks.schedule(runnable, period, TimeUnit.MILLISECONDS);
+            logger.info("[xnd][sstable]启动WrappedRunnable flush 定时任务，每{}ms一次",period);
         }
     }
 
@@ -378,6 +379,8 @@ public class ColumnFamilyStore implements ColumnFamilyStoreMBean
                 }
             }
         }, DatabaseDescriptor.getReadRpcTimeout(), DatabaseDescriptor.getReadRpcTimeout(), TimeUnit.MILLISECONDS);
+
+        logger.info("[xnd]构造{}.{}对应的ColumnFamilyStore完成", keyspace.getName(), name);
     }
 
     /** call when dropping or renaming a CF. Performs mbean housekeeping and invalidates CFS to other operations */

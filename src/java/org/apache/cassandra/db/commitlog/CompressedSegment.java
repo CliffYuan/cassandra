@@ -22,6 +22,9 @@ import java.nio.ByteBuffer;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.apache.cassandra.config.DatabaseDescriptor;
 import org.apache.cassandra.io.FSWriteError;
 import org.apache.cassandra.io.compress.ICompressor;
@@ -34,6 +37,8 @@ import org.apache.cassandra.io.util.FileUtils;
  */
 public class CompressedSegment extends CommitLogSegment
 {
+    private static final Logger logger = LoggerFactory.getLogger(CompressedSegment.class);
+
     static private final ThreadLocal<WrappedByteBuffer> compressedBufferHolder = new ThreadLocal<WrappedByteBuffer>() {
         protected WrappedByteBuffer initialValue()
         {
@@ -61,6 +66,7 @@ public class CompressedSegment extends CommitLogSegment
         this.compressor = commitLog.compressor;
         try
         {
+            logger.info("[xnd][commitlog]调用FileChannel.wirte(ByteBuffer)写数据，file:{}",super.getPath());
             channel.write((ByteBuffer) buffer.duplicate().flip());
         }
         catch (IOException e)
@@ -131,6 +137,7 @@ public class CompressedSegment extends CommitLogSegment
             writeSyncMarker(compressedBuffer, 0, (int) channel.position(), (int) channel.position() + compressedBuffer.remaining());
             channel.write(compressedBuffer);
             channel.force(true);
+            logger.info("[xnd][commitlog]sync,调用FileChannel.wirte(ByteBuffer)写数据，file:{}",super.getPath());
         }
         catch (Exception e)
         {

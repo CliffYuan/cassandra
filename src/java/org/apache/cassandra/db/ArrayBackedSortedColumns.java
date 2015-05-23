@@ -23,10 +23,16 @@ import com.google.common.base.Function;
 import com.google.common.collect.AbstractIterator;
 import com.google.common.collect.Iterables;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.apache.cassandra.config.CFMetaData;
 import org.apache.cassandra.db.composites.CellName;
+import org.apache.cassandra.db.composites.CellNameType;
 import org.apache.cassandra.db.composites.Composite;
+import org.apache.cassandra.db.composites.SimpleDenseCellNameType;
 import org.apache.cassandra.db.filter.ColumnSlice;
+import org.apache.cassandra.db.marshal.BytesType;
 import org.apache.cassandra.utils.BatchRemoveIterator;
 import org.apache.cassandra.utils.memory.AbstractAllocator;
 import org.apache.cassandra.utils.SearchIterator;
@@ -40,6 +46,8 @@ import org.apache.cassandra.utils.SearchIterator;
  */
 public class ArrayBackedSortedColumns extends ColumnFamily
 {
+    private static final Logger logger = LoggerFactory.getLogger(ArrayBackedSortedColumns.class);
+
     private static final Cell[] EMPTY_ARRAY = new Cell[0];
     private static final int MINIMAL_CAPACITY = 10;
 
@@ -297,6 +305,8 @@ public class ArrayBackedSortedColumns extends ColumnFamily
 
     public void addColumn(Cell cell)
     {
+        logger.info("[xnd][db]将Cell添加到ColumnFamily，Keyspace:{},CF:{}一行row中的列,该行中目前cell列数:{},{}",this.metadata.ksName,this.metadata.cfName,size,isSorted?"排序":"不排序");
+
         if (size == 0)
         {
             internalAdd(cell);

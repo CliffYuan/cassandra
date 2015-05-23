@@ -94,7 +94,7 @@ public class SequentialWriter extends OutputStream implements WritableByteChanne
         this.trickleFsyncByteInterval = DatabaseDescriptor.getTrickleFsyncIntervalInKb() * 1024;
 
         fd = CLibrary.getfd(channel);
-
+        logger.info("[xnd]创建file:{}关联的FileChannel和WrappedDataOutputStreamPlus",filePath);
         directoryFD = CLibrary.tryOpenDirectory(file.getParent());
         stream = new WrappedDataOutputStreamPlus(this, this);
     }

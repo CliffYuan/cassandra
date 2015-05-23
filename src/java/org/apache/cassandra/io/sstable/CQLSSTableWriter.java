@@ -25,6 +25,9 @@ import java.util.*;
 
 import com.google.common.collect.ImmutableMap;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.apache.cassandra.config.CFMetaData;
 import org.apache.cassandra.config.Config;
 import org.apache.cassandra.config.KSMetaData;
@@ -540,6 +543,8 @@ public class CQLSSTableWriter implements Closeable
      */
     private static class BufferedWriter extends SSTableSimpleUnsortedWriter
     {
+        private static final Logger logger = LoggerFactory.getLogger(BufferedWriter.class);
+
         private boolean needsSync = false;
 
         public BufferedWriter(File directory, CFMetaData metadata, IPartitioner partitioner, long bufferSizeInMB)
@@ -555,6 +560,7 @@ public class CQLSSTableWriter implements Closeable
                 @Override
                 public void addColumn(Cell cell)
                 {
+                    logger.info("[xnd]Cell:{}添加列到CF",cell.name());
                     super.addColumn(cell);
                     try
                     {

@@ -23,6 +23,9 @@ import java.util.*;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.apache.cassandra.auth.Permission;
 import org.apache.cassandra.config.CFMetaData;
 import org.apache.cassandra.config.ColumnDefinition;
@@ -55,7 +58,7 @@ import static org.apache.cassandra.cql3.statements.RequestValidations.invalidReq
 public abstract class ModificationStatement implements CQLStatement
 {
     private static final ColumnIdentifier CAS_RESULT_COLUMN = new ColumnIdentifier("[applied]", false);
-
+    private static final Logger logger = LoggerFactory.getLogger(ModificationStatement.class);
     public static enum StatementType { INSERT, UPDATE, DELETE }
     public final StatementType type;
 
@@ -461,10 +464,12 @@ public abstract class ModificationStatement implements CQLStatement
 
         if (hasConditions() && options.getProtocolVersion() == 1)
             throw new InvalidRequestException("Conditional updates are not supported by the protocol version in use. You need to upgrade to a driver using the native protocol v2.");
-
-        return hasConditions()
+        logger.info("[xnd][cql3]执行更新/插入/删除---开始");
+        ResultMessage resultMessage= hasConditions()
              ? executeWithCondition(queryState, options)
              : executeWithoutCondition(queryState, options);
+        logger.info("[xnd][cql3]执行更新/插入/删除---结束");
+        return resultMessage;
     }
 
     private ResultMessage executeWithoutCondition(QueryState queryState, QueryOptions options)
@@ -640,17 +645,18 @@ public abstract class ModificationStatement implements CQLStatement
         Composite clusteringPrefix = createClusteringPrefix(options);
 
         UpdateParameters params = makeUpdateParameters(keys, clusteringPrefix, options, local, now);
-
+        logger.info("[xnd][cql3]将sql转化为Mutation----开始");
         Collection<IMutation> mutations = new ArrayList<IMutation>(keys.size());
         for (ByteBuffer key: keys)
         {
             ThriftValidation.validateKey(cfm, key);
-            ColumnFamily cf = ArrayBackedSortedColumns.factory.create(cfm);
+            ColumnFamily cf = ArrayBackedSortedColumns.factory.create(cfm);//初始化ColumnFamily
             addUpdateForKey(cf, key, clusteringPrefix, params);
             Mutation mut = new Mutation(cfm.ksName, key, cf);
-
+            logger.info("[xnd][cql3]将sql转化为Mutation,{}",mut);
             mutations.add(isCounter() ? new CounterMutation(mut, options.getConsistency()) : mut);
         }
+        logger.info("[xnd][cql3]将sql转化为Mutation----结束");
         return mutations;
     }
 

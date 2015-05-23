@@ -46,6 +46,13 @@ import org.apache.cassandra.utils.concurrent.OpOrder;
 import org.apache.cassandra.metrics.KeyspaceMetrics;
 
 /**
+ * Keyspace表示一个库
+ * 主要工作：
+ * 1.构造复制策略AbstractReplicationStrategy
+ * 2.
+ * 2.根据KSMetaData元数据构造ColumnFamilyStore对象（即库中的所有表）
+ * 3.
+ *
  * It represents a Keyspace.
  */
 public class Keyspace
@@ -264,6 +271,7 @@ public class Keyspace
 
     private Keyspace(String keyspaceName, boolean loadSSTables)
     {
+        logger.info("[xnd]创建Keyspace对象，构造中执行{1.创建复制策略；2.}");
         metadata = Schema.instance.getKSMetaData(keyspaceName);
         assert metadata != null : "Unknown keyspace " + keyspaceName;
         createReplicationStrategy(metadata);
@@ -361,6 +369,11 @@ public class Keyspace
         if (TEST_FAIL_WRITES && metadata.name.equals(TEST_FAIL_WRITES_KS))
             throw new RuntimeException("Testing write failures");
 
+        logger.info("[xnd]写数据，执行到写入核心方法Keyspace.apply(mutation,writeCommitLog,updateIndexes)记录Commitlog和写入ColumnFamilyStore，KeyspaceName:{}，writeCommitLog:{},updateIndexes:{}",
+                    mutation.getKeyspaceName(),
+                    writeCommitLog?"记录Commitlog":"不记录Commitlog",
+                    updateIndexes?"更新索引":"不更新索引"
+                    );
         try (OpOrder.Group opGroup = writeOrder.start())
         {
             // write the mutation to the commitlog and memtables
@@ -368,13 +381,15 @@ public class Keyspace
             if (writeCommitLog)
             {
                 Tracing.trace("Appending to commitlog");
-                replayPosition = CommitLog.instance.add(mutation);
+                logger.info("[xnd][写数据,第一步记录commitlog，]-----开始----调用CommitLog.instance.add(mutation)记录Commitlog,Mutation:{}",mutation);
+                replayPosition = CommitLog.instance.add(mutation);//添加到Commitlog
+                logger.info("[xnd][写数据,第一步记录commitlog，]------结束---调用CommitLog.instance.add(mutation)记录Commitlog,Mutation:{}",mutation);
             }
 
             DecoratedKey key = StorageService.getPartitioner().decorateKey(mutation.key());
             for (ColumnFamily cf : mutation.getColumnFamilies())
             {
-                ColumnFamilyStore cfs = columnFamilyStores.get(cf.id());
+                ColumnFamilyStore cfs = columnFamilyStores.get(cf.id());//通过ColumnFamily.id找到ColumnFamilyStore
                 if (cfs == null)
                 {
                     logger.error("Attempting to mutate non-existant table {}", cf.id());
@@ -385,7 +400,11 @@ public class Keyspace
                 SecondaryIndexManager.Updater updater = updateIndexes
                                                       ? cfs.indexManager.updaterFor(key, cf, opGroup)
                                                       : SecondaryIndexManager.nullUpdater;
+                logger.info("[xnd][写数据,第二步记录memtable,]------开始-----调用ColumnFamilyStore.apply(key,cf)添加到memtable中,Keyspace:{},CF_ID:{},CF_name:{},共{}个数据Cell",
+                            cfs.metadata.cfName,cfs.metadata.cfId,cfs.metadata.cfName,cf.getColumnCount());
                 cfs.apply(key, cf, updater, opGroup, replayPosition);
+                logger.info("[xnd][写数据,第二步记录memtable,]------结束----调用ColumnFamilyStore.apply(key,cf)添加到memtable中,Keyspace:{},CF_ID:{},CF_name:{},共{}个数据Cell",
+                            cfs.metadata.cfName,cfs.metadata.cfId,cfs.metadata.cfName,cf.getColumnCount());
             }
         }
     }

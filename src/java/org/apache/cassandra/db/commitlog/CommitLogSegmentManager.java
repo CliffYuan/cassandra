@@ -153,7 +153,7 @@ public class CommitLogSegmentManager
                                 throw new AssertionError();
                             }
                         }
-
+                        logger.info("[xnd]线程COMMIT-LOG-ALLOCATOR执行task:{}",task);
                         task.run();
                     }
                     catch (Throwable t)
@@ -169,7 +169,7 @@ public class CommitLogSegmentManager
         };
 
         run = true;
-
+        logger.info("[xnd]创建CommitLogSegmentManager对象，并且启动COMMIT-LOG-ALLOCATOR线程");
         managerThread = new Thread(runnable, "COMMIT-LOG-ALLOCATOR");
         managerThread.start();
     }

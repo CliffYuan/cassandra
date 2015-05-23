@@ -272,6 +272,7 @@ public final class SystemKeyspace
                                            SSTableActivity,
                                            SizeEstimates,
                                            AvailableRanges));
+        logger.info("[xnd]初始化系统库(system)KSMetaData对象,包括20个CFMetaData");
         return new KSMetaData(NAME, LocalStrategy.class, Collections.<String, String>emptyMap(), true, tables);
     }
 

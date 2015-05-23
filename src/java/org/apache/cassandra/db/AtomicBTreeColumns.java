@@ -31,6 +31,9 @@ import com.google.common.base.Functions;
 import com.google.common.collect.AbstractIterator;
 import com.google.common.collect.Iterators;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.apache.cassandra.config.CFMetaData;
 import org.apache.cassandra.db.composites.CellName;
 import org.apache.cassandra.db.composites.Composite;
@@ -61,6 +64,8 @@ import static org.apache.cassandra.db.index.SecondaryIndexManager.Updater;
  */
 public class AtomicBTreeColumns extends ColumnFamily
 {
+    private static final Logger logger = LoggerFactory.getLogger(AtomicBTreeColumns.class);
+
     static final long EMPTY_SIZE = ObjectSizes.measure(new AtomicBTreeColumns(CFMetaData.denseCFMetaData("keyspace", "table", BytesType.instance), null))
             + ObjectSizes.measure(new Holder(null, null));
 
@@ -230,13 +235,14 @@ public class AtomicBTreeColumns extends ColumnFamily
                 {
                     deletionInfo = current.deletionInfo;
                 }
-
+                logger.info("[xnd][memtable]添加数据到Btree-----开始");
                 Object[] tree = BTree.update(current.tree, metadata.comparator.columnComparator(Memtable.MEMORY_POOL instanceof NativePool), cm, cm.getColumnCount(), true, updater);
 
                 if (tree != null && refUpdater.compareAndSet(this, current, new Holder(tree, deletionInfo)))
                 {
                     indexer.updateRowLevelIndexes();
                     updater.finish();
+                    logger.info("[xnd][memtable]添加数据到Btree-----结束");
                     return Pair.create(updater.dataSize, updater.colUpdateTimeDelta);
                 }
                 else if (!monitorOwned)

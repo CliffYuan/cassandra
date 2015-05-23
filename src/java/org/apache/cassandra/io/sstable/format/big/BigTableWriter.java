@@ -81,6 +81,7 @@ public class BigTableWriter extends SSTableWriter
             dbuilder = SegmentedFile.getBuilder(DatabaseDescriptor.getDiskAccessMode(), false);
         }
         iwriter = new IndexWriter(keyCount, dataFile);
+        logger.info("[xnd]初始化BigTableWriter对象，并且初始化SequentialWriter对象dataFile:{},dbuilder:{},compression；{}，filename:{}",dataFile,dbuilder,compression,getFilename());
     }
 
     public void mark()
@@ -153,7 +154,7 @@ public class BigTableWriter extends SSTableWriter
                          FBUtilities.MAX_UNSIGNED_SHORT);
             return;
         }
-
+        logger.info("[xnd]写一整行数据------------------这行数据共:{}列",cf.getColumnCount());
         long startPosition = beforeAppend(decoratedKey);
         long endPosition;
         try

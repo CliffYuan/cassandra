@@ -117,6 +117,7 @@ public abstract class CommitLogSegment
 
     static CommitLogSegment createSegment(CommitLog commitLog)
     {
+        logger.info("[xnd][commitlog]将创建{}类型的CommitLogSegment",commitLog.compressor!=null?"CompressedSegment":"MemoryMappedSegment");
         return commitLog.compressor != null ? new CompressedSegment(commitLog) : new MemoryMappedSegment(commitLog);
     }
 
@@ -128,7 +129,7 @@ public abstract class CommitLogSegment
     /**
      * Constructs a new segment file.
      *
-     * @param filePath  if not null, recycles the existing file by renaming it and truncating it to CommitLog.SEGMENT_SIZE.
+     * @param commitLog  if not null, recycles the existing file by renaming it and truncating it to CommitLog.SEGMENT_SIZE.
      */
     CommitLogSegment(CommitLog commitLog)
     {
@@ -152,6 +153,7 @@ public abstract class CommitLogSegment
         endOfBuffer = buffer.capacity();
         lastSyncedOffset = buffer.position();
         allocatePosition.set(lastSyncedOffset + SYNC_MARKER_SIZE);
+        logger.info("[xnd]初始化CommitLogSegment对象,这个才是真正的日志文件，file:{}",logFile.getAbsolutePath());
     }
 
     abstract ByteBuffer createBuffer(CommitLog commitLog);
@@ -162,17 +164,21 @@ public abstract class CommitLogSegment
      */
     Allocation allocate(Mutation mutation, int size)
     {
+        logger.info("[xnd][commitlog]给mutation分配buffer空间");
         final OpOrder.Group opGroup = appendOrder.start();
         try
         {
             int position = allocate(size);
             if (position < 0)
             {
+                logger.info("[xnd][commitlog]没有足够的buffer空间，将创建新的commitlogSegment");
                 opGroup.close();
                 return null;
             }
             markDirty(mutation, position);
-            return new Allocation(this, opGroup, position, (ByteBuffer) buffer.duplicate().position(position).limit(position + size));
+            Allocation allocation= new Allocation(this, opGroup, position, (ByteBuffer) buffer.duplicate().position(position).limit(position + size));//注意buffer参数，其实是CommitLogSegment.buffer
+            logger.info("[xnd][cmomitlog]分配{}大小的buffer成功，返回Allocation",size);
+            return allocation;
         }
         catch (Throwable t)
         {
@@ -244,6 +250,7 @@ public abstract class CommitLogSegment
      */
     synchronized void sync()
     {
+        logger.info("[xnd][commitlog]sync......");
         boolean close = false;
         // check we have more work to do
         if (allocatePosition.get() <= lastSyncedOffset + SYNC_MARKER_SIZE)
@@ -399,7 +406,7 @@ public abstract class CommitLogSegment
             if (cfm.isPurged())
                 logger.error("Attempted to write commit log entry for unrecognized table: {}", columnFamily.id());
             else
-                ensureAtleast(cfDirty, cfm.cfId, allocatedPosition);
+                ensureAtleast(cfDirty, cfm.cfId, allocatedPosition);//todo 没有看懂
         }
     }
 
@@ -551,7 +558,7 @@ public abstract class CommitLogSegment
         private final CommitLogSegment segment;
         private final OpOrder.Group appendOp;
         private final int position;
-        private final ByteBuffer buffer;
+        private final ByteBuffer buffer;//CommitLogSegment的共享buffer
 
         Allocation(CommitLogSegment segment, OpOrder.Group appendOp, int position, ByteBuffer buffer)
         {

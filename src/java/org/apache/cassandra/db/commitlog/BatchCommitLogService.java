@@ -17,10 +17,15 @@
  */
 package org.apache.cassandra.db.commitlog;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.apache.cassandra.config.DatabaseDescriptor;
 
 class BatchCommitLogService extends AbstractCommitLogService
 {
+    private static final Logger logger = LoggerFactory.getLogger(BatchCommitLogService.class);
+
     public BatchCommitLogService(CommitLog commitLog)
     {
         super(commitLog, "COMMIT-LOG-WRITER", (int) DatabaseDescriptor.getCommitLogSyncBatchWindow());
@@ -28,9 +33,11 @@ class BatchCommitLogService extends AbstractCommitLogService
 
     protected void maybeWaitForSync(CommitLogSegment.Allocation alloc)
     {
+        logger.info("[xnd]批量的将CommitLogSegment.Allocation写Commitlog，{}，将等待",alloc.getSegment().getPath());
         // wait until record has been safely persisted to disk
         pending.incrementAndGet();
         alloc.awaitDiskSync(commitLog.metrics.waitingOnCommit);
         pending.decrementAndGet();
+        logger.info("[xnd]批量的将CommitLogSegment.Allocation写Commitlog，{}，等待结束",alloc.getSegment().getPath());
     }
 }

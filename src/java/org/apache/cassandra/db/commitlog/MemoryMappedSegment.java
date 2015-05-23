@@ -23,18 +23,22 @@ import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.apache.cassandra.config.DatabaseDescriptor;
 import org.apache.cassandra.io.FSWriteError;
 import org.apache.cassandra.io.util.FileUtils;
 import org.apache.cassandra.utils.CLibrary;
 
-/*
+/* 使用直接字节缓冲区MappedByteBuffer
  * Memory-mapped segment. Maps the destination channel into an appropriately-sized memory-mapped buffer in which the
  * mutation threads write. On sync forces the buffer to disk.
  * If possible, recycles used segment files to avoid reallocating large chunks of disk.
  */
 public class MemoryMappedSegment extends CommitLogSegment
 {
+    private static final Logger logger = LoggerFactory.getLogger(MemoryMappedSegment.class);
     /**
      * Constructs a new segment file.
      *
@@ -48,6 +52,7 @@ public class MemoryMappedSegment extends CommitLogSegment
         int firstSync = buffer.position();
         buffer.putInt(firstSync + 0, 0);
         buffer.putInt(firstSync + 4, 0);
+        logger.info("[xnd][commitlog]初始化MemoryMappedSegment对象，file:{}",super.getPath());
     }
 
     ByteBuffer createBuffer(CommitLog commitLog)
@@ -61,12 +66,13 @@ public class MemoryMappedSegment extends CommitLogSegment
             try (RandomAccessFile raf = new RandomAccessFile(logFile, "rw"))
             {
                 raf.setLength(DatabaseDescriptor.getCommitLogSegmentSize());
+                logger.info("[xnd][commitlog]设置文件{}大小{}",getPath(),DatabaseDescriptor.getCommitLogSegmentSize());
             }
             catch (IOException e)
             {
                 throw new FSWriteError(e, logFile);
             }
-
+            logger.info("[xnd][commitlog]创建直接字节缓冲区MappedByteBuffer，并与文件{}建立内存映射",getPath());
             return channel.map(FileChannel.MapMode.READ_WRITE, 0, DatabaseDescriptor.getCommitLogSegmentSize());
         }
         catch (IOException e)
@@ -89,7 +95,7 @@ public class MemoryMappedSegment extends CommitLogSegment
         // write previous sync marker to point to next sync marker
         // we don't chain the crcs here to ensure this method is idempotent if it fails
         writeSyncMarker(buffer, startMarker, startMarker, nextMarker);
-
+        logger.info("[xnd][commitlog]sync强制刷盘，file:{}",super.getPath());
         try {
             ((MappedByteBuffer) buffer).force();
         }

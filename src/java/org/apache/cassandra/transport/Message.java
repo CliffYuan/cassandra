@@ -470,7 +470,7 @@ public abstract class Message
                 connection = (ServerConnection)request.connection();
                 QueryState qstate = connection.validateNewMessage(request.type, connection.getVersion(), request.getStreamId());
 
-                logger.debug("Received: {}, v={}", request, connection.getVersion());
+                logger.info("[xnd][transport]Received: {}, v={}", request, connection.getVersion());
 
                 response = request.execute(qstate);
                 response.setStreamId(request.getStreamId());
@@ -485,7 +485,7 @@ public abstract class Message
                 return;
             }
 
-            logger.debug("Responding: {}, v={}", response, connection.getVersion());
+            logger.info("[xnd][transport]Responding: {}, v={}", response, connection.getVersion());
             flush(new FlushItem(ctx, response, request.getSourceFrame()));
         }
 

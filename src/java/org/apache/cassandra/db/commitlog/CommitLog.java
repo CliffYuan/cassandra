@@ -92,6 +92,7 @@ public class CommitLog implements CommitLogMBean
     @VisibleForTesting
     CommitLog(String location, CommitLogArchiver archiver)
     {
+
         compressorClass = DatabaseDescriptor.getCommitLogCompression();
         this.location = location;
         ICompressor compressor = compressorClass != null ? CompressionParameters.createCompressor(compressorClass) : null;
@@ -104,7 +105,7 @@ public class CommitLog implements CommitLogMBean
         executor = DatabaseDescriptor.getCommitLogSync() == Config.CommitLogSync.batch
                 ? new BatchCommitLogService(this)
                 : new PeriodicCommitLogService(this);
-
+        logger.info("[xnd]创建Commitlog对象，location:{},AbstractCommitLogService:{}",location,executor);
         allocator = new CommitLogSegmentManager(this);
         executor.start();
 
@@ -246,7 +247,7 @@ public class CommitLog implements CommitLogMBean
     public ReplayPosition add(Mutation mutation)
     {
         assert mutation != null;
-
+        logger.info("[xnd][commitlog]写commitlog ---,添加Mutation到commitlog开始，mutation:{}",mutation.toString());
         long size = Mutation.serializer.serializedSize(mutation, MessagingService.current_version);
 
         long totalSize = size + ENTRY_OVERHEAD_SIZE;
@@ -270,9 +271,10 @@ public class CommitLog implements CommitLogMBean
 
             int start = buffer.position();
             // checksummed mutation
-            Mutation.serializer.serialize(mutation, dos, MessagingService.current_version);
+            Mutation.serializer.serialize(mutation, dos, MessagingService.current_version);//写数据
             checksum.update(buffer, start, (int) size);
             buffer.putInt(checksum.getCrc());
+            logger.info("[xnd][commitlog]写buffer完成");
         }
         catch (IOException e)
         {
@@ -282,8 +284,9 @@ public class CommitLog implements CommitLogMBean
         {
             alloc.markWritten();
         }
-
+        logger.info("[xnd][commitlog]等待刷盘开始,{}",mutation.toString());
         executor.finishWriteFor(alloc);
+        logger.info("[xnd][commitlog]等待刷盘结束,{}",mutation.toString());
         return alloc.getReplayPosition();
     }
 

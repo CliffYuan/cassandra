@@ -17,12 +17,17 @@
  */
 package org.apache.cassandra.db.commitlog;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.apache.cassandra.config.DatabaseDescriptor;
 import org.apache.cassandra.utils.concurrent.WaitQueue;
 
 class PeriodicCommitLogService extends AbstractCommitLogService
 {
     private static final int blockWhenSyncLagsMillis = (int) (DatabaseDescriptor.getCommitLogSyncPeriod() * 1.5);
+
+    private static final Logger logger = LoggerFactory.getLogger(PeriodicCommitLogService.class);
 
     public PeriodicCommitLogService(final CommitLog commitLog)
     {
@@ -36,6 +41,7 @@ class PeriodicCommitLogService extends AbstractCommitLogService
             // wait until periodic sync() catches up with its schedule
             long started = System.currentTimeMillis();
             pending.incrementAndGet();
+            logger.info("[xnd][commitlog]周期性的将CommitLogSegment.Allocation写Commitlog，{}---将等待",alloc.getSegment().getPath());
             while (waitForSyncToCatchUp(started))
             {
                 WaitQueue.Signal signal = syncComplete.register(commitLog.metrics.waitingOnCommit.time());
@@ -45,6 +51,7 @@ class PeriodicCommitLogService extends AbstractCommitLogService
                     signal.cancel();
             }
             pending.decrementAndGet();
+            logger.info("[xnd][commitlog]周期性的将CommitLogSegment.Allocation写Commitlog，{}---等待结束",alloc.getSegment().getPath());
         }
     }
 

@@ -223,7 +223,7 @@ public class LegacySchemaTables
             for (UDAggregate aggregate : createAggregatesFromAggregatesPartition(readSchemaPartitionForKeyspace(AGGREGATES, partition.key)).values())
                 org.apache.cassandra.cql3.functions.Functions.addFunction(aggregate);
         }
-
+        logger.info("[xnd]系统启动，从schema_keyspaces表中获取所有的用户Keyspace（库），返回KSMetaData元数据信息");
         return keyspaces;
     }
 

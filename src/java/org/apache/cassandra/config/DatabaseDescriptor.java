@@ -711,6 +711,7 @@ public class DatabaseDescriptor
      */
     public static void createAllDirectories()
     {
+        logger.info("[xnd]-创建目录commitlog-directory:{},saved-caches-directory:{},data_file_directories{}",conf.commitlog_directory,conf.saved_caches_directory,conf.data_file_directories);
         try
         {
             if (conf.data_file_directories.length == 0)
@@ -754,6 +755,7 @@ public class DatabaseDescriptor
     /* For tests ONLY, don't use otherwise or all hell will break loose */
     public static void setPartitioner(IPartitioner newPartitioner)
     {
+        logger.info("[xnd]设置IPartitioner：{}",newPartitioner);
         partitioner = newPartitioner;
     }
 

@@ -636,7 +636,7 @@ public class CassandraServer implements Cassandra.Iface
     {
         ThriftClientState cState = state();
         String keyspace = cState.getKeyspace();
-        cState.hasColumnFamilyAccess(keyspace, column_parent.column_family, Permission.MODIFY);
+        cState.hasColumnFamilyAccess(keyspace, column_parent.column_family, Permission.MODIFY);//权限校验
 
         CFMetaData metadata = ThriftValidation.validateColumnFamily(keyspace, column_parent.column_family, false);
         ThriftValidation.validateKey(metadata, key);
@@ -656,7 +656,7 @@ public class CassandraServer implements Cassandra.Iface
                           ? metadata.comparator.makeCellName(column_parent.super_column, column.name)
                           : metadata.comparator.cellFromByteBuffer(column.name);
 
-            ColumnFamily cf = ArrayBackedSortedColumns.factory.create(cState.getKeyspace(), column_parent.column_family);
+            ColumnFamily cf = ArrayBackedSortedColumns.factory.create(cState.getKeyspace(), column_parent.column_family);//创建CF
             cf.addColumn(name, column.value, column.timestamp, column.ttl);
             mutation = new org.apache.cassandra.db.Mutation(cState.getKeyspace(), key, cf);
         }

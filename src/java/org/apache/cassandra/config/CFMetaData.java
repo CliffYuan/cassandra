@@ -164,9 +164,9 @@ public final class CFMetaData
     }
 
     //REQUIRED
-    public final UUID cfId;                           // internal id, never exposed to user
-    public final String ksName;                       // name of keyspace
-    public final String cfName;                       // name of this column family
+    public final UUID cfId;                           // internal id, never exposed to user ###对应数据库一个表的标示
+    public final String ksName;                       // name of keyspace                   ###对应数据库一个库的标示
+    public final String cfName;                       // name of this column family         ###对应数据库一个表的名字
     public final ColumnFamilyType cfType;             // standard, super
     public volatile CellNameType comparator;          // bytes, long, timeuuid, utf8, etc.
 

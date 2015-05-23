@@ -56,7 +56,7 @@ public class Schema
     public static final int NAME_LENGTH = 48;
 
     /* metadata map for faster keyspace lookup */
-    private final Map<String, KSMetaData> keyspaces = new NonBlockingHashMap<>();
+    private final Map<String, KSMetaData> keyspaces = new NonBlockingHashMap<>();//所有库的元数据信息
 
     /* Keyspace objects, one per keyspace. Only one instance should ever exist for any given keyspace. */
     private final Map<String, Keyspace> keyspaceInstances = new NonBlockingHashMap<>();
@@ -105,6 +105,7 @@ public class Schema
      */
     public Schema loadFromDisk(boolean updateVersion)
     {
+        logger.info("[xnd]系统启动，初始化所有的Keyspace");
         load(LegacySchemaTables.readSchemaFromSystemTables());
         if (updateVersion)
             updateVersion();
@@ -135,6 +136,7 @@ public class Schema
      */
     public Schema load(KSMetaData keyspaceDef)
     {
+        logger.info("[xnd]load 库{}",keyspaceDef.name);
         for (CFMetaData cfm : keyspaceDef.cfMetaData().values())
             load(cfm);
 

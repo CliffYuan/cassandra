@@ -30,7 +30,7 @@ public final class KSMetaData
     public final String name;
     public final Class<? extends AbstractReplicationStrategy> strategyClass;
     public final Map<String, String> strategyOptions;
-    private final Map<String, CFMetaData> cfMetaData;
+    private final Map<String, CFMetaData> cfMetaData;// 表名
     public final boolean durableWrites;
 
     public final UTMetaData userTypes;

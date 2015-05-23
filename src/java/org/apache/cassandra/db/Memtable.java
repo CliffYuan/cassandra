@@ -184,7 +184,7 @@ public class Memtable
     long put(DecoratedKey key, ColumnFamily cf, SecondaryIndexManager.Updater indexer, OpOrder.Group opGroup)
     {
         AtomicBTreeColumns previous = rows.get(key);
-
+        logger.info("[xnd][memtable]将数据写到memtable（AtomicBTreeColumns）----开始");
         long initialSize = 0;
         if (previous == null)
         {
@@ -208,6 +208,7 @@ public class Memtable
         }
 
         final Pair<Long, Long> pair = previous.addAllWithSizeDelta(cf, allocator, opGroup, indexer);
+        logger.info("[xnd][memtable]将数据写到memtable（AtomicBTreeColumns）----结束");
         liveDataSize.addAndGet(initialSize + pair.left);
         currentOperations.addAndGet(cf.getColumnCount() + (cf.isMarkedForDelete() ? 1 : 0) + cf.deletionInfo().rangeCount());
         return pair.right;

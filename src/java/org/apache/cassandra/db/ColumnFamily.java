@@ -31,6 +31,9 @@ import java.util.UUID;
 import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.apache.cassandra.cache.IRowCacheEntry;
 import org.apache.cassandra.config.CFMetaData;
 import org.apache.cassandra.config.Schema;
@@ -58,7 +61,9 @@ public abstract class ColumnFamily implements Iterable<Cell>, IRowCacheEntry
     /* The column serializer for this Column Family. Create based on config. */
     public static final ColumnFamilySerializer serializer = new ColumnFamilySerializer();
 
-    protected final CFMetaData metadata;
+    protected final CFMetaData metadata;//对应一个数据库中的表
+
+    private static final Logger logger = LoggerFactory.getLogger(ColumnFamily.class);
 
     protected ColumnFamily(CFMetaData metadata)
     {
@@ -546,6 +551,7 @@ public abstract class ColumnFamily implements Iterable<Cell>, IRowCacheEntry
 
         public T create(CFMetaData metadata, boolean insertReversed)
         {
+            logger.info("[xnd][db]初始化ColumnFamily对象，{},{}",metadata.ksName,metadata.cfName);
             return create(metadata, insertReversed, 0);
         }
 
