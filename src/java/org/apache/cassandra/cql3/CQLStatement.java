@@ -23,6 +23,9 @@ import org.apache.cassandra.service.ClientState;
 import org.apache.cassandra.service.QueryState;
 import org.apache.cassandra.transport.messages.ResultMessage;
 
+/**
+ * execute执行核心方法
+ */
 public interface CQLStatement
 {
     /**

@@ -24,6 +24,7 @@ import java.util.Map.Entry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.xnd.StringHelp;
 import org.apache.cassandra.exceptions.ConfigurationException;
 import org.apache.cassandra.dht.Token;
 import org.apache.cassandra.locator.TokenMetadata.Topology;
@@ -147,7 +148,7 @@ public class NetworkTopologyStrategy extends AbstractReplicationStrategy
                 }
             }
         }
-
+        logger.info("[xnd][locator]计算token节点完成，endpoints:{}", StringHelp.arrayList2String(replicas));
         return new ArrayList<InetAddress>(replicas);
     }
 

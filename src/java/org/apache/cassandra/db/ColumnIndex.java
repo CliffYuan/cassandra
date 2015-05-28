@@ -179,7 +179,10 @@ public class ColumnIndex
         public void add(OnDiskAtom column) throws IOException
         {
             atomCount++;
-            logger.info("[xnd]将column写入文件");
+            if(atomCount==0||atomCount==1||atomCount==10||atomCount==100||atomCount==1000||atomCount==10000||atomCount==100000)
+            {
+                logger.info("[xnd][db]将column写入文件,name;{},atomCount:{}",String.valueOf(column.name().toByteBuffer().array()),atomCount);
+            }
             if (firstColumn == null)
             {
                 firstColumn = column;

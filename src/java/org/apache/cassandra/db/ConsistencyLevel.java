@@ -246,7 +246,7 @@ public enum ConsistencyLevel
 
     public void assureSufficientLiveNodes(Keyspace keyspace, Iterable<InetAddress> liveEndpoints) throws UnavailableException
     {
-        int blockFor = blockFor(keyspace);
+        int blockFor = blockFor(keyspace);// n/2+1个节点
         switch (this)
         {
             case ANY:
@@ -291,7 +291,7 @@ public enum ConsistencyLevel
                 int live = Iterables.size(liveEndpoints);
                 if (live < blockFor)
                 {
-                    logger.debug("Live nodes {} do not satisfy ConsistencyLevel ({} required)", Iterables.toString(liveEndpoints), blockFor);
+                    logger.info("[xnd][db]Live nodes {} do not satisfy ConsistencyLevel ({} required),存活的节点不满足一致性要求的节点，抛异常结束", Iterables.toString(liveEndpoints), blockFor);
                     throw new UnavailableException(this, blockFor, live);
                 }
                 break;

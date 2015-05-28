@@ -21,6 +21,9 @@ import java.io.DataInput;
 import java.io.IOException;
 import java.util.UUID;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.apache.cassandra.config.Schema;
 import org.apache.cassandra.io.ISSTableSerializer;
 import org.apache.cassandra.io.IVersionedSerializer;
@@ -31,6 +34,8 @@ import org.apache.cassandra.utils.UUIDSerializer;
 
 public class ColumnFamilySerializer implements IVersionedSerializer<ColumnFamily>, ISSTableSerializer<ColumnFamily>
 {
+    private static final Logger logger = LoggerFactory.getLogger(ColumnFamilySerializer.class);
+
     /*
      * Serialized ColumnFamily format:
      *
@@ -50,6 +55,7 @@ public class ColumnFamilySerializer implements IVersionedSerializer<ColumnFamily
     */
     public void serialize(ColumnFamily cf, DataOutputPlus out, int version)
     {
+        logger.info("[xnd][db]ColumnFamily中的Cell序列化，将数据写入文件流,ColumnFamily:{},共：{}列cell",cf.metadata.cfName,cf.getColumnCount());
         try
         {
             if (cf == null)

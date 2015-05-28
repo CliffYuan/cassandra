@@ -812,7 +812,7 @@ public class StorageProxy implements StorageProxyMBean
         AbstractWriteResponseHandler<IMutation> responseHandler = rs.getWriteResponseHandler(naturalEndpoints, pendingEndpoints, consistency_level, callback, writeType);
 
         // exit early if we can't fulfill the CL at this time
-        responseHandler.assureSufficientLiveNodes();
+        responseHandler.assureSufficientLiveNodes();//当不满足一致性要求的节点时将抛异常。
 
         performer.apply(mutation, Iterables.concat(naturalEndpoints, pendingEndpoints), responseHandler, localDataCenter, consistency_level);
         return responseHandler;
@@ -913,14 +913,14 @@ public class StorageProxy implements StorageProxyMBean
                 throw new OverloadedException("Too many in flight hints: " + StorageMetrics.totalHintsInProgress.getCount());
             }
 
-            if (FailureDetector.instance.isAlive(destination))
+            if (FailureDetector.instance.isAlive(destination))//如果endpoint还live
             {
                 if (destination.equals(FBUtilities.getBroadcastAddress()) && OPTIMIZE_LOCAL_REQUESTS)
                 {
-                    insertLocal = true;
+                    insertLocal = true;//如果当前机器就是replicas中的一个，直接写入到本地
                 } else
                 {
-                    // belongs on a different server
+                    // belongs on a different server  否则需要向远程服务器发送命令
                     if (message == null)
                         message = mutation.createMessage();
                     String dc = DatabaseDescriptor.getEndpointSnitch().getDatacenter(destination);
@@ -928,7 +928,7 @@ public class StorageProxy implements StorageProxyMBean
                     // (1.1 knows how to forward old-style String message IDs; updated to int in 2.0)
                     if (localDataCenter.equals(dc))
                     {
-                        MessagingService.instance().sendRR(message, destination, responseHandler, true);
+                        MessagingService.instance().sendRR(message, destination, responseHandler, true);//相同数据中心--直接发送
                     } else
                     {
                         Collection<InetAddress> messages = (dcGroups != null) ? dcGroups.get(dc) : null;
@@ -947,10 +947,10 @@ public class StorageProxy implements StorageProxyMBean
                 if (!shouldHint(destination))
                     continue;
 
-                // Schedule a local hint
+                // Schedule a local hint 否则，这里的话，可能是需要使用hinted-handoff机制
                 submitHint(mutation, destination, responseHandler);
             }
-        }
+        }//end
 
         if (insertLocal)
             insertLocal(mutation, responseHandler);

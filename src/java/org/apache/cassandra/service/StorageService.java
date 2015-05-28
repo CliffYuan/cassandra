@@ -275,8 +275,8 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
     /** This method updates the local token on disk  */
     public void setTokens(Collection<Token> tokens)
     {
-        if (logger.isDebugEnabled())
-            logger.debug("Setting tokens to {}", tokens);
+        if (logger.isInfoEnabled())
+            logger.info("[xnd][service]更新Setting tokens to {}", tokens);
         SystemKeyspace.updateTokens(tokens);
         tokenMetadata.updateNormalTokens(tokens, FBUtilities.getBroadcastAddress());
         Collection<Token> localTokens = getLocalTokens();
@@ -572,6 +572,8 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
 
     public synchronized void initServer(int delay) throws ConfigurationException
     {
+        logger.info("[xnd][启动流程]StorageService--------开始");
+
         logger.info("Cassandra version: {}", FBUtilities.getReleaseVersionString());
         logger.info("Thrift API version: {}", cassandraConstants.VERSION);
         logger.info("CQL supported versions: {} (default: {})",
@@ -594,7 +596,7 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
         if (Boolean.parseBoolean(System.getProperty("cassandra.load_ring_state", "true")))
         {
             logger.info("Loading persisted ring state");
-            Multimap<InetAddress, Token> loadedTokens = SystemKeyspace.loadTokens();
+            Multimap<InetAddress, Token> loadedTokens = SystemKeyspace.loadTokens();//从system.peers库表中查找token
             Map<InetAddress, UUID> loadedHostIds = SystemKeyspace.loadHostIds();
             for (InetAddress ep : loadedTokens.keySet())
             {
@@ -685,7 +687,7 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
         }
         else
         {
-            Collection<Token> tokens = SystemKeyspace.getSavedTokens();
+            Collection<Token> tokens = SystemKeyspace.getSavedTokens();//从system.local库表查询当前节点的tokens
             if (!tokens.isEmpty())
             {
                 tokenMetadata.updateNormalTokens(tokens, FBUtilities.getBroadcastAddress());
@@ -697,6 +699,7 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
             }
             logger.info("Not joining ring as requested. Use JMX (StorageService->joinRing()) to initiate ring joining");
         }
+        logger.info("[xnd][启动流程]StorageService--------结束");
     }
 
     /**
@@ -897,7 +900,7 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
         }
         else
         {
-            bootstrapTokens = SystemKeyspace.getSavedTokens();
+            bootstrapTokens = SystemKeyspace.getSavedTokens();//这里
             if (bootstrapTokens.isEmpty())
             {
                 Collection<String> initialTokens = DatabaseDescriptor.getInitialTokens();
@@ -1833,8 +1836,8 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
         Set<InetAddress> endpointsToRemove = new HashSet<>();
 
 
-        if (logger.isDebugEnabled())
-            logger.debug("Node {} state normal, token {}", endpoint, tokens);
+        if (logger.isInfoEnabled())
+            logger.info("Node {} state normal, token {}", endpoint, tokens);
 
         if (tokenMetadata.isMember(endpoint))
             logger.info("Node {} state jump to normal", endpoint);
@@ -3125,7 +3128,7 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
             if (FailureDetector.instance.isAlive(endpoint))
                 liveEps.add(endpoint);
         }
-
+        logger.info("[xnd][service]获取存活的节点.keyspace:{}",keyspace.getName());
         return liveEps;
     }
 

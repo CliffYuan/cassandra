@@ -52,7 +52,9 @@ import static org.apache.cassandra.cql3.statements.RequestValidations.checkFalse
 import static org.apache.cassandra.cql3.statements.RequestValidations.checkNotNull;
 import static org.apache.cassandra.cql3.statements.RequestValidations.invalidRequest;
 
-/*
+/* 核心方法execute()
+ * Statement到StorageProxy的纽带
+ *
  * Abstract parent class of individual modifications, i.e. INSERT, UPDATE and DELETE.
  */
 public abstract class ModificationStatement implements CQLStatement

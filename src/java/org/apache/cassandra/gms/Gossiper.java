@@ -1380,6 +1380,8 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
         unreachableEndpoints.put(ep, System.nanoTime());
         if (logger.isTraceEnabled())
             logger.trace("Adding saved endpoint {} {}", ep, epState.getHeartBeatState().getGeneration());
+
+        logger.info("[xnd][gossipe]添加节点到Gossipe,Adding saved endpoint {} {}", ep, epState.getHeartBeatState().getGeneration());
     }
 
     public void addLocalApplicationState(ApplicationState state, VersionedValue value)

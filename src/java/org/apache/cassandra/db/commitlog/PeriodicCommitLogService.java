@@ -41,7 +41,7 @@ class PeriodicCommitLogService extends AbstractCommitLogService
             // wait until periodic sync() catches up with its schedule
             long started = System.currentTimeMillis();
             pending.incrementAndGet();
-            logger.info("[xnd][commitlog]周期性的将CommitLogSegment.Allocation写Commitlog，{}---将等待",alloc.getSegment().getPath());
+            logger.info("[xnd][commitlog]周期性的将CommitLogSegment.Allocation写Commitlog，{}---将等待-----，blockWhenSyncLagsMillis:{}",alloc.getSegment().getPath(),blockWhenSyncLagsMillis);
             while (waitForSyncToCatchUp(started))
             {
                 WaitQueue.Signal signal = syncComplete.register(commitLog.metrics.waitingOnCommit.time());
@@ -60,6 +60,6 @@ class PeriodicCommitLogService extends AbstractCommitLogService
      */
     private boolean waitForSyncToCatchUp(long started)
     {
-        return started > lastSyncedAt + blockWhenSyncLagsMillis;
+        return started > lastSyncedAt + blockWhenSyncLagsMillis;//上次刷盘时间距离现在大于blockWhenSyncLagsMillis ms 将等待刷盘。
     }
 }

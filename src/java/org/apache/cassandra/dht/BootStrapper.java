@@ -27,6 +27,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.xnd.StringHelp;
 import org.apache.cassandra.config.DatabaseDescriptor;
 import org.apache.cassandra.config.Schema;
 import org.apache.cassandra.db.Keyspace;
@@ -149,6 +150,7 @@ public class BootStrapper extends ProgressEventNotifierSupport
     }
 
     /**
+     *
      * if initialtoken was specified, use that (split on comma).
      * otherwise, if num_tokens == 1, pick a token to assume half the load of the most-loaded node.
      * else choose num_tokens tokens at random
@@ -190,6 +192,7 @@ public class BootStrapper extends ProgressEventNotifierSupport
             if (metadata.getEndpoint(token) == null)
                 tokens.add(token);
         }
+        logger.info("[xnd][dht]生成当前节点的token,Partitioner:{}",StorageService.getPartitioner(), StringHelp.arrayList2String2(tokens));
         return tokens;
     }
 

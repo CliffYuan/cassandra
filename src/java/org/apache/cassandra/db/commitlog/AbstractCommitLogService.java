@@ -62,6 +62,7 @@ public abstract class AbstractCommitLogService
         this.commitLog = commitLog;
         this.name = name;
         this.pollIntervalMillis = pollIntervalMillis;
+        logger.info("[xnd][commitlog]初始化AbstractCommitLogService，name：{}，pollIntervalMillis：{} ms",name,pollIntervalMillis);
     }
 
     // Separated into individual method to ensure relevant objects are constructed before this is started.
@@ -91,8 +92,8 @@ public abstract class AbstractCommitLogService
                         // sync and signal
                         long syncStarted = System.currentTimeMillis();
                         commitLog.sync(shutdown);//执行日志入磁盘文件
-                        lastSyncedAt = syncStarted;
-                        syncComplete.signalAll();
+                        lastSyncedAt = syncStarted;//更新同步时间
+                        syncComplete.signalAll();//取消线程等待  LockSupport.unpark(thread);
                         logger.info("[xnd][commitlog]线程定时执行日志文件刷盘-----结束");
 
                         // sleep any time we have left before the next one is due

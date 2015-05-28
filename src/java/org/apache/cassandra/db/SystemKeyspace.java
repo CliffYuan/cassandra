@@ -31,6 +31,7 @@ import com.google.common.io.ByteStreams;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.xnd.StringHelp;
 import org.apache.cassandra.config.CFMetaData;
 import org.apache.cassandra.config.DatabaseDescriptor;
 import org.apache.cassandra.config.KSMetaData;
@@ -82,8 +83,8 @@ public final class SystemKeyspace
     public static final String BATCHLOG = "batchlog";
     public static final String PAXOS = "paxos";
     public static final String BUILT_INDEXES = "IndexInfo";
-    public static final String LOCAL = "local";
-    public static final String PEERS = "peers";
+    public static final String LOCAL = "local"; //查询当前节点tokens
+    public static final String PEERS = "peers";//节点信息
     public static final String PEER_EVENTS = "peer_events";
     public static final String RANGE_XFERS = "range_xfers";
     public static final String COMPACTIONS_IN_PROGRESS = "compactions_in_progress";
@@ -616,7 +617,7 @@ public final class SystemKeyspace
             if (row.has("tokens"))
                 tokenMap.putAll(peer, deserializeTokens(row.getSet("tokens", UTF8Type.instance)));
         }
-
+        logger.info("[xnd][db]从system.peers库表中查找tokens:{}", StringHelp.SetMultimap(tokenMap));
         return tokenMap;
     }
 
@@ -635,6 +636,7 @@ public final class SystemKeyspace
                 hostIdMap.put(peer, row.getUUID("host_id"));
             }
         }
+        logger.info("[xnd][db]从system.peers库表中查找host:{}", StringHelp.SetMultimap(hostIdMap));
         return hostIdMap;
     }
 

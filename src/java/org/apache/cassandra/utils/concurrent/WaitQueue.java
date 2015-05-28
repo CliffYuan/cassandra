@@ -23,6 +23,9 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 import java.util.concurrent.locks.LockSupport;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.codahale.metrics.Timer;
 
 /**
@@ -69,7 +72,7 @@ import com.codahale.metrics.Timer;
  */
 public final class WaitQueue
 {
-
+    private static final Logger logger = LoggerFactory.getLogger(WaitQueue.class);
     private static final int CANCELLED = -1;
     private static final int SIGNALLED = 1;
     private static final int NOT_SET = 0;
@@ -131,14 +134,14 @@ public final class WaitQueue
         // we finish signalling it all, we pick a random thread we have woken-up and hold onto it, so that if we encounter
         // it again we know we're looping. We reselect a random thread periodically, progressively less often.
         // the "correct" solution to this problem is to use a queue that permits snapshot iteration, but this solution is sufficient
-        int i = 0, s = 5;
+        int i = 0, s = 5,all=0;
         Thread randomThread = null;
         Iterator<RegisteredSignal> iter = queue.iterator();
         while (iter.hasNext())
         {
             RegisteredSignal signal = iter.next();
-            Thread signalled = signal.signal();
-
+            Thread signalled = signal.signal();//取消线程等待  LockSupport.unpark(thread);
+            all++;
             if (signalled != null)
             {
                 if (signalled == randomThread)
@@ -153,6 +156,7 @@ public final class WaitQueue
 
             iter.remove();
         }
+        logger.info("[xnd][commitlog]恢复挂起的{}个线程",all);
     }
 
     private void cleanUpCancelled()

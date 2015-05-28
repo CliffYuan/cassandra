@@ -25,6 +25,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.xnd.StringHelp;
 import org.apache.cassandra.exceptions.ConfigurationException;
 import org.apache.cassandra.dht.Token;
 
@@ -37,6 +42,8 @@ import org.apache.cassandra.dht.Token;
  */
 public class SimpleStrategy extends AbstractReplicationStrategy
 {
+    private static final Logger logger = LoggerFactory.getLogger(SimpleStrategy.class);
+
     public SimpleStrategy(String keyspaceName, TokenMetadata tokenMetadata, IEndpointSnitch snitch, Map<String, String> configOptions)
     {
         super(keyspaceName, tokenMetadata, snitch, configOptions);
@@ -44,7 +51,7 @@ public class SimpleStrategy extends AbstractReplicationStrategy
 
     public List<InetAddress> calculateNaturalEndpoints(Token token, TokenMetadata metadata)
     {
-        int replicas = getReplicationFactor();
+        int replicas = getReplicationFactor();//复制英子
         ArrayList<Token> tokens = metadata.sortedTokens();
         List<InetAddress> endpoints = new ArrayList<InetAddress>(replicas);
 
@@ -59,6 +66,7 @@ public class SimpleStrategy extends AbstractReplicationStrategy
             if (!endpoints.contains(ep))
                 endpoints.add(ep);
         }
+        logger.info("[xnd][locator]计算token节点完成，endpoints:{}", StringHelp.arrayList2String(endpoints));
         return endpoints;
     }
 

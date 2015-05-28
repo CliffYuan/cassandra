@@ -67,7 +67,7 @@ public class ColumnSerializer implements ISerializer<Cell>
 
     public void serialize(Cell cell, DataOutputPlus out) throws IOException
     {
-        logger.info("[xnd]列Cell序列化，将数据写入文件流,cell:{}",cell.name().toString());
+
         assert !cell.name().isEmpty();
         type.cellSerializer().serialize(cell.name(), out);
         try

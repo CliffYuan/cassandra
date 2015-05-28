@@ -50,7 +50,7 @@ public class WriteResponseHandler<T> extends AbstractWriteResponseHandler<T>
                                 WriteType writeType)
     {
         super(keyspace, writeEndpoints, pendingEndpoints, consistencyLevel, callback, writeType);
-        responses = totalBlockFor();
+        responses = totalBlockFor();//QUORUM 类型时=n/2+1+等待的任务 ,n=复制英子
     }
 
     public WriteResponseHandler(InetAddress endpoint, WriteType writeType, Runnable callback)

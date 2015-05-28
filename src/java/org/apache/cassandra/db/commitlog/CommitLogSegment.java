@@ -365,7 +365,7 @@ public abstract class CommitLogSegment
                                       syncComplete.register(waitingOnCommit.time()) :
                                       syncComplete.register();
             if (lastSyncedOffset < position)
-                signal.awaitUninterruptibly();
+                signal.awaitUninterruptibly();//LockSupport.park();挂起线程
             else
                 signal.cancel();
         }

@@ -28,6 +28,7 @@ import com.google.common.collect.Multimap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.xnd.StringHelp;
 import org.apache.cassandra.db.ConsistencyLevel;
 import org.apache.cassandra.db.Keyspace;
 import org.apache.cassandra.db.WriteType;
@@ -114,7 +115,7 @@ public abstract class AbstractReplicationStrategy
             endpoints = new ArrayList<InetAddress>(calculateNaturalEndpoints(searchToken, tm));
             cachedEndpoints.put(keyToken, endpoints);
         }
-
+        logger.info("[xnd][locator]根据复制策略获取token所分配的所有节点:{}", StringHelp.arrayList2String(endpoints));
         return new ArrayList<InetAddress>(endpoints);
     }
 
@@ -134,7 +135,7 @@ public abstract class AbstractReplicationStrategy
                                                                 Runnable callback,
                                                                 WriteType writeType)
     {
-        if (consistency_level.isDatacenterLocal())
+        if (consistency_level.isDatacenterLocal())//LOCAL_QUORUM 和 LOCAL_ONE 两种模式
         {
             // block for in this context will be localnodes block.
             return new DatacenterWriteResponseHandler<T>(naturalEndpoints, pendingEndpoints, consistency_level, getKeyspace(), callback, writeType);
@@ -143,7 +144,7 @@ public abstract class AbstractReplicationStrategy
         {
             return new DatacenterSyncWriteResponseHandler<T>(naturalEndpoints, pendingEndpoints, consistency_level, getKeyspace(), callback, writeType);
         }
-        return new WriteResponseHandler<T>(naturalEndpoints, pendingEndpoints, consistency_level, getKeyspace(), callback, writeType);
+        return new WriteResponseHandler<T>(naturalEndpoints, pendingEndpoints, consistency_level, getKeyspace(), callback, writeType);//前5种类型
     }
 
     private Keyspace getKeyspace()

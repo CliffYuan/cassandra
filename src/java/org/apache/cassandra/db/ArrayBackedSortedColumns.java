@@ -34,6 +34,7 @@ import org.apache.cassandra.db.composites.SimpleDenseCellNameType;
 import org.apache.cassandra.db.filter.ColumnSlice;
 import org.apache.cassandra.db.marshal.BytesType;
 import org.apache.cassandra.utils.BatchRemoveIterator;
+import org.apache.cassandra.utils.ByteBufferUtil;
 import org.apache.cassandra.utils.memory.AbstractAllocator;
 import org.apache.cassandra.utils.SearchIterator;
 
@@ -305,7 +306,19 @@ public class ArrayBackedSortedColumns extends ColumnFamily
 
     public void addColumn(Cell cell)
     {
-        logger.info("[xnd][db]将Cell添加到ColumnFamily，Keyspace:{},CF:{}一行row中的列,该行中目前cell列数:{},{}",this.metadata.ksName,this.metadata.cfName,size,isSorted?"排序":"不排序");
+        try
+        {
+            if (!this.metadata.ksName.equals("system"))
+            {
+                logger.info("[xnd][db]将Cell添加到ColumnFamily，Keyspace:{},CF:{}一行row中的列,该行中目前cell列数:{},{},name:{}", this.metadata.ksName, this.metadata.cfName, size, isSorted ? "排序" : "不排序", ByteBufferUtil.string(cell.name().toByteBuffer()));
+            }
+            else if (size == 0 || size == 10 || size == 100 || size == 1000 || size == 10000 || size == 100000)
+            {
+                logger.info("[xnd][db]将Cell添加到ColumnFamily，Keyspace:{},CF:{}一行row中的列,该行中目前cell列数:{},{},name:{}", this.metadata.ksName, this.metadata.cfName, size, isSorted ? "排序" : "不排序", ByteBufferUtil.string(cell.name().toByteBuffer()));
+            }
+        }catch (Exception e){
+
+        }
 
         if (size == 0)
         {
