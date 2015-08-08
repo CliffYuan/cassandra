@@ -129,7 +129,7 @@ public class CompactionManager implements CompactionManagerMBean
     private final static CompactionExecutor cacheCleanupExecutor = new CacheCleanupExecutor();
 
     private final CompactionMetrics metrics = new CompactionMetrics(executor, validationExecutor);
-    private final Multiset<ColumnFamilyStore> compactingCF = ConcurrentHashMultiset.create();
+    private final Multiset<ColumnFamilyStore> compactingCF = ConcurrentHashMultiset.create();//压缩中
 
     private final RateLimiter compactionRateLimiter = RateLimiter.create(Double.MAX_VALUE);
 
@@ -160,7 +160,7 @@ public class CompactionManager implements CompactionManagerMBean
     {
         if (cfs.isAutoCompactionDisabled())
         {
-            logger.debug("Autocompaction is disabled");
+            logger.debug("Autocompaction is disabled");//自动压缩
             return Collections.emptyList();
         }
 
@@ -221,7 +221,7 @@ public class CompactionManager implements CompactionManagerMBean
         {
             try
             {
-                logger.debug("Checking {}.{}", cfs.keyspace.getName(), cfs.name);
+                logger.info("[xnd][compaction]keyspace:{}.cf:{}压缩--------开始", cfs.keyspace.getName(), cfs.name);
                 if (!cfs.isValid())
                 {
                     logger.debug("Aborting compaction for dropped CF");
@@ -236,6 +236,7 @@ public class CompactionManager implements CompactionManagerMBean
                     return;
                 }
                 task.execute(metrics);
+                logger.info("[xnd][compaction]keyspace:{}.cf:{}压缩--------结束", cfs.keyspace.getName(), cfs.name);
             }
             finally
             {

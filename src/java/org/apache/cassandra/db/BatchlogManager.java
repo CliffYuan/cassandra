@@ -88,7 +88,9 @@ public class BatchlogManager implements BatchlogManagerMBean
         {
             public void runMayThrow() throws ExecutionException, InterruptedException
             {
+                logger.info("[xnd][batchlog]每1分钟一次------------开始");
                 replayAllFailedBatches();
+                logger.info("[xnd][batchlog]每1分钟一次------------结束");
             }
         };
 

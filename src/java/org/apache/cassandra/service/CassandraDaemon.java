@@ -173,9 +173,15 @@ public class CassandraDaemon
             }
         });
 
+        // 加载KSMetaData
+        //1.初始化空schema对象和加载system库的硬编码系统表
+        //2.加载用户库表的KSMetaData
+        //1.初始化系统库(system)KSMetaData对象,包括20个CFMetaData
+        //2.初始化用户库和表
         // load schema from disk
         Schema.instance.loadFromDisk();
 
+        //清理未处理完成的压缩工作，和更新压缩状态
         // clean up compaction leftovers
         Map<Pair<String, String>, Map<Integer, UUID>> unfinishedCompactions = SystemKeyspace.getUnfinishedCompactions();
         for (Pair<String, String> kscf : unfinishedCompactions.keySet())
@@ -187,6 +193,7 @@ public class CassandraDaemon
         }
         SystemKeyspace.discardCompactionsInProgress();
 
+        //清理用户表碎片,如临时文件
         // clean up debris in the rest of the keyspaces
         for (String keyspaceName : Schema.instance.getKeyspaces())
         {
@@ -199,6 +206,8 @@ public class CassandraDaemon
         }
 
         Keyspace.setInitialized();
+
+        // 初始化keyspaces和ColumnFamilyStore对象，关闭压缩
         // initialize keyspaces
         for (String keyspaceName : Schema.instance.getKeyspaces())
         {
@@ -230,6 +239,7 @@ public class CassandraDaemon
             logger.warn("Unable to start GCInspector (currently only supported on the Sun JVM)");
         }
 
+        //日志回放
         // replay the log if necessary
         try
         {
@@ -240,6 +250,7 @@ public class CassandraDaemon
             throw new RuntimeException(e);
         }
 
+        // 打开压缩
         // enable auto compaction
         for (Keyspace keyspace : Keyspace.all())
         {
@@ -252,6 +263,8 @@ public class CassandraDaemon
                 }
             }
         }
+
+        // 启动压缩任务
         // start compactions in five minutes (if no flushes have occurred by then to do so)
         Runnable runnable = new Runnable()
         {
@@ -273,6 +286,7 @@ public class CassandraDaemon
 
         SystemKeyspace.finishStartup();
 
+        // 初始化StorageService对象，初始化tokens等
         // start server internals
         StorageService.instance.registerDaemon(this);
         try
@@ -303,9 +317,11 @@ public class CassandraDaemon
             }
         }
 
+        //等待gossip
         if (!FBUtilities.getBroadcastAddress().equals(InetAddress.getLoopbackAddress()))
             waitForGossipToSettle();
 
+        // 启动容量预估和调整任务
         // schedule periodic dumps of table size estimates into SystemKeyspace.SIZE_ESTIMATES_CF
         // set cassandra.size_recorder_interval to 0 to disable
         int sizeRecorderInterval = Integer.getInteger("cassandra.size_recorder_interval", 5 * 60);

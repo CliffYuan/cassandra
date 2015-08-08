@@ -132,6 +132,9 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
         {
             try
             {
+                //1、随机取一个当前活着的节点，并向它发送同步请求
+                //2、向随机一台不可达的机器发送同步请求
+                //3、如果第一步中所选择的节点不是seed，或者当前活着的节点数少于seed数，则向随意一台seed发送同步请求
                 //wait on messaging service to start listening
                 MessagingService.instance().waitUntilListening();
 
@@ -153,10 +156,10 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                                                                                           digestSynMessage,
                                                                                           GossipDigestSyn.serializer);
                     /* Gossip to some random live member */
-                    boolean gossipedToSeed = doGossipToLiveMember(message);
+                    boolean gossipedToSeed = doGossipToLiveMember(message);//发送给活着中的一个
 
                     /* Gossip to some unreachable member with some probability to check if he is back up */
-                    maybeGossipToUnreachableMember(message);
+                    maybeGossipToUnreachableMember(message);//发送给不可达中的一个
 
                     /* Gossip to a seed if we did not do so above, or we have seen less nodes
                        than there are seeds.  This prevents partitions where each group of nodes
@@ -486,7 +489,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
             gDigests.add(new GossipDigest(endpoint, generation, maxVersion));
         }
 
-        if (logger.isTraceEnabled())
+        if (logger.isInfoEnabled())
         {
             StringBuilder sb = new StringBuilder();
             for (GossipDigest gDigest : gDigests)
@@ -494,7 +497,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
                 sb.append(gDigest);
                 sb.append(" ");
             }
-            logger.trace("Gossip Digests are : {}", sb);
+            logger.info("[xnd][gossip]Gossip Digests are : {}", sb);
         }
     }
 
@@ -636,8 +639,8 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
         /* Generate a random number from 0 -> size */
         int index = (size == 1) ? 0 : random.nextInt(size);
         InetAddress to = liveEndpoints.get(index);
-        if (logger.isTraceEnabled())
-            logger.trace("Sending a GossipDigestSyn to {} ...", to);
+        if (logger.isInfoEnabled())
+            logger.info("[xnd][gossip]在liveEndpoints或unreachableEndpoints随机选择一个 Sending a GossipDigestSyn to {} ...", to);
         MessagingService.instance().sendOneWay(message, to);
         return seeds.contains(to);
     }
@@ -1271,9 +1274,9 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
      */
     public void start(int generationNbr, Map<ApplicationState, VersionedValue> preloadLocalStates)
     {
-        buildSeedsList();
+        buildSeedsList();//设置seeds
         /* initialize the heartbeat state for this localEndpoint */
-        maybeInitializeLocalState(generationNbr);
+        maybeInitializeLocalState(generationNbr);//初始化EndpointState状态
         EndpointState localState = endpointStateMap.get(FBUtilities.getBroadcastAddress());
         for (Map.Entry<ApplicationState, VersionedValue> entry : preloadLocalStates.entrySet())
             localState.addApplicationState(entry.getKey(), entry.getValue());
@@ -1282,7 +1285,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
         DatabaseDescriptor.getEndpointSnitch().gossiperStarting();
         if (logger.isTraceEnabled())
             logger.trace("gossip started with generation {}", localState.getHeartBeatState().getGeneration());
-
+        logger.info("[xnd][启动流程]启动GossipTask任务，每{}运行一次",Gossiper.intervalInMillis);
         scheduledGossipTask = executor.scheduleWithFixedDelay(new GossipTask(),
                                                               Gossiper.intervalInMillis,
                                                               Gossiper.intervalInMillis,
@@ -1324,6 +1327,7 @@ public class Gossiper implements IFailureDetectionEventListener, GossiperMBean
         {
             throw new RuntimeException(wtf);
         }
+        logger.info("[xnd][gossip]机器交流完成");
     }
 
     private void buildSeedsList()

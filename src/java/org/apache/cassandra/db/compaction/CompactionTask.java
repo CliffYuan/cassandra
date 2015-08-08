@@ -102,7 +102,7 @@ public class CompactionTask extends AbstractCompactionTask
         // The collection of sstables passed may be empty (but not null); even if
         // it is not empty, it may compact down to nothing if all rows are deleted.
         assert sstables != null;
-
+        logger.info("[xnd][compaction]压缩开始");
         if (sstables.size() == 0)
             return;
 

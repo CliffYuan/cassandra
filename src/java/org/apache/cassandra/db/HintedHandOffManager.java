@@ -165,8 +165,10 @@ public class HintedHandOffManager implements HintedHandOffManagerMBean
         {
             public void run()
             {
+                logger.info("[xnd][hintedhand]定时任务，每10分钟一次----------开始");
                 scheduleAllDeliveries();
                 metrics.log();
+                logger.info("[xnd][hintedhand]定时任务，每10分钟一次----------结束");
             }
         };
         executor.scheduleWithFixedDelay(runnable, 10, 10, TimeUnit.MINUTES);

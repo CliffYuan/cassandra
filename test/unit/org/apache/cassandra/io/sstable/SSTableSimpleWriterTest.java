@@ -37,7 +37,7 @@ import static org.apache.cassandra.utils.ByteBufferUtil.toInt;
 
 public class SSTableSimpleWriterTest
 {
-    public static final String KEYSPACE = "SSTableSimpleWriterTest";
+    public static final String KEYSPACE = "KKK";
     public static final String CF_STANDARDINT = "StandardInteger1";
 
     @BeforeClass

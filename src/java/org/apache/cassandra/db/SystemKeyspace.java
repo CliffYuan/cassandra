@@ -580,6 +580,7 @@ public final class SystemKeyspace
         String req = "INSERT INTO system.%s (key, tokens) VALUES ('%s', ?)";
         executeInternal(String.format(req, LOCAL, LOCAL), tokensAsSet(tokens));
         forceBlockingFlush(LOCAL);
+        logger.info("[xnd][db]生成的tokens写入到system.local表中");
     }
 
     /**
@@ -819,6 +820,7 @@ public final class SystemKeyspace
         String req = "INSERT INTO system.%s (key, bootstrapped) VALUES ('%s', ?)";
         executeInternal(String.format(req, LOCAL, LOCAL), state.name());
         forceBlockingFlush(LOCAL);
+        logger.info("[xnd][db]更新system.local中当前节点状态，{}",state.name());
     }
 
     public static boolean isIndexBuilt(String keyspaceName, String indexName)

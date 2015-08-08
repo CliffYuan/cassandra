@@ -1,0 +1,5 @@
+
+1.机架感应器：
+SimpleSnitch：不提供机架和数据中心功能。所有节点是一个数据中心。在建立keyspace时只需指定副本因子。
+PropertyFileSnitch：通过配置文件指定对应的数据中心和机架名称。具体的数据中心和机架的配置位于cassandra-topology.properties文件。
+GossipingPropertyFileSnitch：定义了本地节点的数据中心和机架名称(在conf/cassandra-rackdc.properties文件里)。它可以通过gossiop将这些信息传播给其它节点。

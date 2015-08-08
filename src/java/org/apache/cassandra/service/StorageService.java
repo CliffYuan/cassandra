@@ -276,7 +276,7 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
     public void setTokens(Collection<Token> tokens)
     {
         if (logger.isInfoEnabled())
-            logger.info("[xnd][service]更新Setting tokens to {}", tokens);
+            logger.info("[xnd][service]更新Setting tokens to system.local表和gossip, {}", tokens);
         SystemKeyspace.updateTokens(tokens);
         tokenMetadata.updateNormalTokens(tokens, FBUtilities.getBroadcastAddress());
         Collection<Token> localTokens = getLocalTokens();
@@ -751,14 +751,14 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
             appStates.put(ApplicationState.HOST_ID, valueFactory.hostId(localHostId));
             appStates.put(ApplicationState.RPC_ADDRESS, valueFactory.rpcaddress(DatabaseDescriptor.getBroadcastRpcAddress()));
             appStates.put(ApplicationState.RELEASE_VERSION, valueFactory.releaseVersion());
-            logger.info("Starting up server gossip");
+            logger.info("[xnd][gossip]启动gossip Starting up server gossip----------开始");
             Gossiper.instance.register(this);
             Gossiper.instance.start(SystemKeyspace.incrementAndGetGeneration(), appStates); // needed for node-ring gathering.
             // gossip snitch infos (local DC and rack)
             gossipSnitchInfo();
             // gossip Schema.emptyVersion forcing immediate check for schema updates (see MigrationManager#maybeScheduleSchemaPull)
             Schema.instance.updateVersionAndAnnounce(); // Ensure we know our own actual Schema UUID in preparation for updates
-
+            logger.info("[xnd][gossip]启动gossip Starting up server gossip----------结束");
             if (!MessagingService.instance().isListening())
                 MessagingService.instance().listen(FBUtilities.getLocalAddress());
             LoadBroadcaster.instance.startBroadcasting();
@@ -771,7 +771,7 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
     private void joinTokenRing(int delay) throws ConfigurationException
     {
         joined = true;
-
+        logger.info("[xnd][启动流程]初始化或者从system.local加载tokens，添加到ring-----开始");
         // We bootstrap if we haven't successfully bootstrapped before, as long as we are not a seed.
         // If we are a seed, or if the user manually sets auto_bootstrap to false,
         // we'll skip streaming data from other nodes and jump directly into the ring.
@@ -782,9 +782,9 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
         // We attempted to replace this with a schema-presence check, but you need a meaningful sleep
         // to get schema info from gossip which defeats the purpose.  See CASSANDRA-4427 for the gory details.
         Set<InetAddress> current = new HashSet<>();
-        if (logger.isDebugEnabled())
+        if (logger.isInfoEnabled())
         {
-            logger.debug("Bootstrap variables: {} {} {} {}",
+            logger.info("[xnd][启动流程]Bootstrap 状态 variables: {} {} {} {}",
                          DatabaseDescriptor.isAutoBootstrap(),
                          SystemKeyspace.bootstrapInProgress(),
                          SystemKeyspace.bootstrapComplete(),
@@ -796,7 +796,7 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
         }
 
         boolean dataAvailable = true; // make this to false when bootstrap streaming failed
-        if (shouldBootstrap())
+        if (shouldBootstrap())//第一次启动 && seed节点不包括本身节点 && 默认是bootstrap
         {
             if (SystemKeyspace.bootstrapInProgress())
                 logger.warn("Detected previous bootstrap failure; retrying");
@@ -961,6 +961,7 @@ public class StorageService extends NotificationBroadcasterSupport implements IE
         {
             logger.info("Startup complete, but write survey mode is active, not becoming an active ring member. Use JMX (StorageService->joinRing()) to finalize ring joining.");
         }
+        logger.info("[xnd][启动流程]初始化或者从system.local加载tokens，添加到ring-----结束");
     }
 
     public void gossipSnitchInfo()

@@ -61,7 +61,7 @@ public class PendingRangeCalculatorService
                 calculatePendingRanges(Keyspace.open(keyspaceName).getReplicationStrategy(), keyspaceName);
             }
             PendingRangeCalculatorService.instance.finishUpdate();
-            logger.debug("finished calculation for {} keyspaces in {}ms", Schema.instance.getNonSystemKeyspaces().size(), System.currentTimeMillis() - start);
+            logger.info("finished calculation for {} keyspaces in {}ms", Schema.instance.getNonSystemKeyspaces().size(), System.currentTimeMillis() - start);
         }
     }
 

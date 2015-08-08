@@ -329,7 +329,7 @@ public class ColumnFamilyStore implements ColumnFamilyStoreMBean
             CacheService.instance.keyCache.loadSaved(this);
 
         // compaction strategy should be created after the CFS has been prepared
-        this.compactionStrategyWrapper = new WrappingCompactionStrategy(this);
+        this.compactionStrategyWrapper = new WrappingCompactionStrategy(this);//压缩
 
         if (maxCompactionThreshold.value() <= 0 || minCompactionThreshold.value() <=0)
         {

@@ -40,11 +40,11 @@
   
   <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
     <encoder>
-      <pattern>%-5level %date{HH:mm:ss,SSS} %msg%n</pattern>
+      <pattern>%d{ISO8601} - %-5p [%t:%C{1}@%L] - %m%n</pattern>
     </encoder>
   </appender>
         
-  <root level="INFO">
+  <root level="info">
     <appender-ref ref="FILE" />
     <appender-ref ref="STDOUT" />
   </root>
